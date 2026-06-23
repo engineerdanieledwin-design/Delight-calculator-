@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delight X — Premium Calculator</title>
+
+<style>
+:root{
+  --bg:#0b0b10;
+  --card:rgba(255,255,255,0.06);
+  --card2:rgba(255,255,255,0.03);
+  --text:#fff;
+  --muted:rgba(255,255,255,0.5);
+  --cyan:#00f5ff;
+  --red:#ff3b30;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,Arial;
+}
+
+body{
+  background:radial-gradient(circle at top,#1a1a25,var(--bg));
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:var(--text);
+}
+
+.app{
+  width:100%;
+  max-width:420px;
+  padding:18px;
+}
+
+.card{
+  background:linear-gradient(145deg,var(--card),var(--card2));
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:28px;
+  padding:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+  font-weight:600;
+  opacity:0.9;
+}
+
+.display{
+  text-align:right;
+  font-size:42px;
+  font-weight:300;
+  min-height:70px;
+  padding:10px 5px;
+  overflow-x:auto;
+}
+
+.sub{
+  text-align:right;
+  font-size:13px;
+  color:var(--muted);
+  min-height:18px;
+}
+
+.history{
+  font-size:12px;
+  color:rgba(255,255,255,0.4);
+  max-height:80px;
+  overflow:auto;
+  margin:10px 0;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+button{
+  border:none;
+  border-radius:16px;
+  padding:16px;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.15s;
+  user-select:none;
+}
+
+button:active{
+  transform:scale(0.92);
+  opacity:0.8;
+}
+
+.num{background:rgba(255,255,255,0.08);color:#fff;}
+.op{background:rgba(0,245,255,0.15);color:var(--cyan);}
+.fn{background:rgba(255,255,255,0.05);color:#ddd;}
+.eq{background:linear-gradient(135deg,#00f5ff,#008cff);color:#000;font-weight:600;}
+.clear{background:rgba(255,59,48,0.15);color:var(--red);}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+<div class="card">
+
+<div class="header">
+<div>DELIGHT X</div>
+<div onclick="copy()" style="cursor:pointer;opacity:.7">Copy</div>
+</div>
+
+<div class="history" id="history"></div>
+<div class="display" id="display">0</div>
+<div class="sub" id="sub"></div>
+
+<div class="grid">
+
+<button class="clear" onclick="clearAll()">AC</button>
+<button class="fn" onclick="append('Math.PI')">π</button>
+<button class="fn" onclick="append('Math.E')">e</button>
+<button class="op" onclick="append('/')">÷</button>
+
+<button class="num" onclick="append('7')">7</button>
+<button class="num" onclick="append('8')">8</button>
+<button class="num" onclick="append('9')">9</button>
+<button class="op" onclick="append('*')">×</button>
+
+<button class="num" onclick="append('4')">4</button>
+<button class="num" onclick="append('5')">5</button>
+<button class="num" onclick="append('6')">6</button>
+<button class="op" onclick="append('-')">−</button>
+
+<button class="num" onclick="append('1')">1</button>
+<button class="num" onclick="append('2')">2</button>
+<button class="num" onclick="append('3')">3</button>
+<button class="op" onclick="append('+')">+</button>
+
+<button class="num" onclick="append('0')">0</button>
+<button class="num" onclick="append('.')">.</button>
+<button class="fn" onclick="append('Math.sin(')">sin</button>
+<button class="eq" onclick="calc()">=</button>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+let display=document.getElementById("display");
+let sub=document.getElementById("sub");
+let historyBox=document.getElementById("history");
+
+let expr="";
+let history=JSON.parse(localStorage.getItem("hx"))||[];
+
+function render(){
+display.innerText=expr||"0";
+}
+
+function append(v){
+expr+=v;
+render();
+}
+
+function clearAll(){
+expr="";
+render();
+}
+
+function safeEval(e){
+try{
+return Function('"use strict";return ('+e+')')();
+}catch{
+return "Error";
+}
+}
+
+function calc(){
+let r=safeEval(expr);
+
+if(r==="Error"){
+display.innerText="Error";
+expr="";
+return;
+}
+
+history.unshift(expr+" = "+r);
+history=history.slice(0,8);
+localStorage.setItem("hx",JSON.stringify(history));
+
+historyBox.innerHTML=history.map(h=>`<div>${h}</div>`).join("");
+
+expr=r.toString();
+render();
+}
+
+function copy(){
+navigator.clipboard.writeText(display.innerText);
+}
+
+document.addEventListener("keydown",(e)=>{
+if(!isNaN(e.key)||"+-*/().".includes(e.key)){
+append(e.key);
+}
+if(e.key==="Enter")calc();
+if(e.key==="Backspace"){
+expr=expr.slice(0,-1);
+render();
+}
+});
+
+render();
+
+</script>
+
+</body>
+</html>
